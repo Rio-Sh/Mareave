@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Mareave</string>
+    <string translatable="false" name="geospatial_pose">lat/lng: %.6f˚, %.6f˚\n\t\t\taccuracy: %.2fm\naltitude: %.2fm\n\t\t\taccuracy: %.2fm\nheading: %.1f˚\n\t\t\taccuracy: %.1f˚</string>
+    <string name="earth_state">earthstate: %1$s\ntrackingstate: %2$s\n%3$s</string>
 </resources>
