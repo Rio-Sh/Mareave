@@ -18,11 +18,13 @@
  * Changes from the original file
  * - Class name
  * - onMapClick
+ * - Replace AR model And Rotate it
  */
 package com.github.rio_sh.mareave
 
 import android.graphics.Color
 import android.opengl.Matrix
+import android.os.SystemClock
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -65,6 +67,8 @@ class GeoRenderer(val activity: MainActivity) :
   val viewMatrix = FloatArray(16)
   val projectionMatrix = FloatArray(16)
   val modelViewMatrix = FloatArray(16) // view x model
+  val rotationMatrix = FloatArray(16)
+  val rotatedMatrix = FloatArray(16)
 
   val modelViewProjectionMatrix = FloatArray(16) // projection x view x model
 
@@ -94,12 +98,12 @@ class GeoRenderer(val activity: MainActivity) :
       virtualObjectTexture =
         Texture.createFromAsset(
           render,
-          "models/spatial_marker_baked.png",
+          "models/spatial_marker_baked_2.png",
           Texture.WrapMode.CLAMP_TO_EDGE,
           Texture.ColorFormat.SRGB
         )
 
-      virtualObjectMesh = Mesh.createFromAsset(render, "models/geospatial_marker.obj");
+      virtualObjectMesh = Mesh.createFromAsset(render, "models/fukidashi.obj");
       virtualObjectShader =
         Shader.createFromAssets(
           render,
@@ -196,15 +200,19 @@ class GeoRenderer(val activity: MainActivity) :
     }
 
     // Draw the placed anchor, if it exists.
-    earthAnchor?.let {
-      render.renderCompassAtAnchor(it)
+    // earthAnchor?.let {
+    //   render.renderCompassAtAnchor(it)
+    // }
+    for (i in earthAnchors) {
+      render.renderCompassAtAnchor(i)
     }
 
     // Compose the virtual scene with the background.
     backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
   }
 
-  var earthAnchor: Anchor? = null
+  // var earthAnchor: Anchor? = null
+  var earthAnchors = mutableListOf<Anchor>()
 
   fun onMapClick(latLng: LatLng) {
     // TODO: place an anchor at the given position.
@@ -212,7 +220,7 @@ class GeoRenderer(val activity: MainActivity) :
     if(earth.trackingState != TrackingState.TRACKING) {
       return
     }
-    earthAnchor?.detach()
+    // earthAnchor?.detach()
     // Place the earth anchor at the same latitude as that of the camera to make it  easier to view.
     val altitude = earth.cameraGeospatialPose.altitude - 1
     // The rotation quaternion of the anchor in the East-Up-South (ENS) coordinate system.
@@ -220,7 +228,7 @@ class GeoRenderer(val activity: MainActivity) :
     val qy = 0f
     val qz = 0f
     val qw = 1f
-    earthAnchor = earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw)
+    earthAnchors.add(earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw))
     //activity.view.mapView?.earthMarker?.apply {
     //  position = latLng
     //  isVisible = true
@@ -240,8 +248,14 @@ class GeoRenderer(val activity: MainActivity) :
     Matrix.multiplyMM(modelViewMatrix, 0, viewMatrix, 0, modelMatrix, 0)
     Matrix.multiplyMM(modelViewProjectionMatrix, 0, projectionMatrix, 0, modelViewMatrix, 0)
 
+    // Create a rotation transformation
+    val time = SystemClock.uptimeMillis() % 4000L
+    val angle = 0.090f * time.toInt()
+    Matrix.setRotateM(rotationMatrix, 0, angle, 0f, -1.0f, 0f)
+    Matrix.multiplyMM(rotatedMatrix, 0, modelViewProjectionMatrix, 0, rotationMatrix, 0)
+
     // Update shader properties and draw
-    virtualObjectShader.setMat4("u_ModelViewProjection", modelViewProjectionMatrix)
+    virtualObjectShader.setMat4("u_ModelViewProjection", rotatedMatrix)
     draw(virtualObjectMesh, virtualObjectShader, virtualSceneFramebuffer)
   }
 
