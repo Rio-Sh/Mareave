@@ -23,11 +23,13 @@ class MainView(val activity: MainActivity) : DefaultLifecycleObserver{
     val snackbarHelper = SnackbarHelper()
 
     var mapView: MapView? = null
+    var latLng: LatLng? = null
     val mapTouchWrapper = root.findViewById<MapTouchWrapper>(R.id.map_wrapper).apply {
         setup { screenLocation ->
-            val latLng: LatLng =
+            latLng =
                 mapView?.googleMap?.projection?.fromScreenLocation(screenLocation) ?: return@setup
-            activity.renderer.onMapClick(latLng)
+            activity.renderer.onMapClick()
+            activity.createMessageDialog.show()
         }
     }
 

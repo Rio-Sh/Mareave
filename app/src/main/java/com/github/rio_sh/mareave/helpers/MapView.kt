@@ -17,6 +17,8 @@
 /*
  * Changes from original file
  * - Add arguments to methods
+ * - Replace googleMap.setOnMarkerClickListener
+ * - Add function(createMessageMarker)
  */
 package com.github.rio_sh.mareave.helpers
 
@@ -41,13 +43,15 @@ import com.google.android.gms.maps.model.MarkerOptions
 
 class MapView(val activity: MainActivity, val googleMap: GoogleMap) {
   private val CAMERA_MARKER_COLOR: Int = Color.argb(255, 0, 255, 0)
-  private val EARTH_MARKER_COLOR: Int = Color.argb(255, 125, 125, 125)
+  //private val EARTH_MARKER_COLOR: Int = Color.argb(255, 125, 125, 125)
 
   var setInitialCameraPosition = false
   val cameraMarker = createMarker(CAMERA_MARKER_COLOR)
   var cameraIdle = true
 
-  val earthMarker = createMarker(EARTH_MARKER_COLOR)
+  //val earthMarker = createMarker(EARTH_MARKER_COLOR)
+  // TODO remove this, And Replace Marker handle to use the database
+  var messageId = 1
 
   init {
     googleMap.uiSettings.apply {
@@ -58,7 +62,12 @@ class MapView(val activity: MainActivity, val googleMap: GoogleMap) {
       isScrollGesturesEnabled = false
     }
 
-    googleMap.setOnMarkerClickListener { unused -> false }
+    //googleMap.setOnMarkerClickListener { unused -> false }
+    googleMap.setOnMarkerClickListener {
+      Log.d("MapView", "setOnMarkerClickListener Called")
+      onMarkerClicked(it.title)
+      true
+    }
 
     // Add listeners to keep track of when the GoogleMap camera is moving.
     googleMap.setOnCameraMoveListener { cameraIdle = false }
@@ -91,7 +100,12 @@ class MapView(val activity: MainActivity, val googleMap: GoogleMap) {
     }
   }
 
-
+  private fun onMarkerClicked(title: String?) {
+    Log.d("MapView", "onMarkerClicked Called")
+    if(title == null ) return
+    // Toast.makeText(activity.applicationContext, "Show $title Marker", Toast.LENGTH_LONG).show()
+    activity.showMessageDialog(title)
+  }
 
   /** Creates and adds a 2D anchor marker on the 2D map view.  */
   private fun createMarker(
@@ -111,16 +125,19 @@ class MapView(val activity: MainActivity, val googleMap: GoogleMap) {
   fun createMessageMarker(
     color: Int,
     latitude: Double,
-    longitude: Double
+    longitude: Double,
+    message: String,
   ): Marker {
     val markersOptions = MarkerOptions()
       .position(LatLng(latitude,longitude))
+      .title(message)
       .draggable(false)
       .anchor(0.5f, 0.5f)
       .flat(true)
       .visible(true)
       .icon(BitmapDescriptorFactory.fromBitmap(createColoredMarkerBitmap(color,
         R.drawable.outline_textsms_white_48)))
+    messageId += 1
     return googleMap.addMarker(markersOptions)!!
   }
 

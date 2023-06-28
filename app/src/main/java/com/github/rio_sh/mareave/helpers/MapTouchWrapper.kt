@@ -13,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/*
+ * Changes from original file
+ * - Add variables(longPressStartTime, isLongPressDetected)
+ * - Changes some code in onInterceptTouchEvent() to handle long press
+ */
 package com.github.rio_sh.mareave.helpers
 
 import android.content.Context
@@ -31,7 +37,13 @@ class MapTouchWrapper : FrameLayout {
   private var touchSlop = 0
   private var down: Point? = null
   private var listener: ((Point) -> Unit)? = null
+  
+  private var longPressStartTime = 0L
+  private var isLongPressDetected = false
 
+  companion object {
+    private const val LONG_PRESS_TIMEOUT = 300L
+  }
   constructor(context: Context) : super(context) {
     setup(context)
   }
@@ -63,13 +75,26 @@ class MapTouchWrapper : FrameLayout {
     val y = event.y.toInt()
     val tapped = Point(x, y)
     when (event.action) {
-      MotionEvent.ACTION_DOWN -> down = tapped
-      MotionEvent.ACTION_MOVE -> if (down != null && distance(down!!, tapped) >= touchSlop) {
-        down = null
+      MotionEvent.ACTION_DOWN -> {
+        down = tapped
+        // detect long press
+        longPressStartTime = System.currentTimeMillis()
+        isLongPressDetected = false
+      }
+      MotionEvent.ACTION_MOVE -> {
+        val currentTime = System.currentTimeMillis()
+        if (down != null && distance(down!!, tapped) >= touchSlop
+          && currentTime - longPressStartTime > LONG_PRESS_TIMEOUT && !isLongPressDetected) {
+          down = null
+          isLongPressDetected = true
+          listener?.invoke(tapped)
+          return true
+        }
       }
       MotionEvent.ACTION_UP -> if (down != null && distance(down!!, tapped) < touchSlop) {
-        listener?.invoke(tapped)
-        return true
+        longPressStartTime = 0
+        isLongPressDetected = false
+        return false
       }
       else -> {
       }

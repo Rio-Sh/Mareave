@@ -1,0 +1,61 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:background="@android:color/transparent"
+    android:gravity="center">
+
+    <LinearLayout
+        android:id="@+id/messageContainer"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="145dp"
+            android:layout_gravity="center"
+            android:layout_marginStart="60dp"
+            android:layout_marginEnd="60dp"
+            android:background="@color/white"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="15dp">
+
+            <EditText
+                android:id="@+id/editMessage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minEms="10"
+                android:maxLength="30"
+                android:layout_gravity="center"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:gravity="center"
+                tools:text="Leave your message"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:autofillHints="Leave your message" />
+
+        </androidx.cardview.widget.CardView>
+    </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/writeButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/baseline_create_24"
+        app:backgroundTint="@color/teal_200"
+        app:fabCustomSize="50dp"
+        app:layout_constraintBottom_toBottomOf="@+id/messageContainer"
+        app:layout_constraintEnd_toEndOf="@+id/messageContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/messageContainer"
+        app:tint="@color/white" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

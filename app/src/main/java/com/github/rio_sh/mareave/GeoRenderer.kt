@@ -19,6 +19,7 @@
  * - Class name
  * - onMapClick
  * - Replace AR model And Rotate it
+ * - Add function(createAnchor)
  */
 package com.github.rio_sh.mareave
 
@@ -56,6 +57,12 @@ class GeoRenderer(val activity: MainActivity) :
   lateinit var backgroundRenderer: BackgroundRenderer
   lateinit var virtualSceneFramebuffer: Framebuffer
   var hasSetTextureNames = false
+
+  private var altitude = 0.0
+  var qx = 0f
+  var qy = 0f
+  var qz = 0f
+  var qw = 1f
 
   // Virtual object (ARCore pawn)
   lateinit var virtualObjectMesh: Mesh
@@ -103,7 +110,7 @@ class GeoRenderer(val activity: MainActivity) :
           Texture.ColorFormat.SRGB
         )
 
-      virtualObjectMesh = Mesh.createFromAsset(render, "models/fukidashi.obj");
+      virtualObjectMesh = Mesh.createFromAsset(render, "models/fukidashi.obj")
       virtualObjectShader =
         Shader.createFromAssets(
           render,
@@ -186,10 +193,8 @@ class GeoRenderer(val activity: MainActivity) :
     render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
     //</editor-fold>
 
-    // TODO: Obtain Geospatial information and display it on the map. (Done)
     val earth = session.earth
     if (earth?.trackingState == TrackingState.TRACKING) {
-      // TODO: the Earth object may used here (Done)
       val cameraGeospatialPose = earth.cameraGeospatialPose
       activity.view.mapView?.updateMapPosition(
         latitude = cameraGeospatialPose.latitude,
@@ -214,20 +219,26 @@ class GeoRenderer(val activity: MainActivity) :
   // var earthAnchor: Anchor? = null
   var earthAnchors = mutableListOf<Anchor>()
 
-  fun onMapClick(latLng: LatLng) {
-    // TODO: place an anchor at the given position.
+  fun onMapClick() {
     val earth = session?.earth ?: return
     if(earth.trackingState != TrackingState.TRACKING) {
       return
     }
     // earthAnchor?.detach()
     // Place the earth anchor at the same latitude as that of the camera to make it  easier to view.
-    val altitude = earth.cameraGeospatialPose.altitude - 1
+    altitude = earth.cameraGeospatialPose.altitude - 1
     // The rotation quaternion of the anchor in the East-Up-South (ENS) coordinate system.
-    val qx = 0f
-    val qy = 0f
-    val qz = 0f
-    val qw = 1f
+    qx = 0f
+    qy = 0f
+    qz = 0f
+    qw = 1f
+  }
+
+  fun createAnchor(latLng: LatLng, message: String) {
+    val earth = session?.earth ?: return
+    if(earth.trackingState != TrackingState.TRACKING) {
+      return
+    }
     earthAnchors.add(earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw))
     //activity.view.mapView?.earthMarker?.apply {
     //  position = latLng
@@ -236,7 +247,8 @@ class GeoRenderer(val activity: MainActivity) :
     activity.view.mapView?.createMessageMarker(
       Color.BLUE,
       latLng.latitude,
-      latLng.longitude)
+      latLng.longitude,
+      message)
   }
 
   private fun SampleRender.renderCompassAtAnchor(anchor: Anchor) {
