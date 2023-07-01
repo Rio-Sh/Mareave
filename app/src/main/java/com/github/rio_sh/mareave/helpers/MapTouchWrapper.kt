@@ -16,18 +16,18 @@
 
 /*
  * Changes from original file
- * - Add variables(longPressStartTime, isLongPressDetected)
- * - Changes some code in onInterceptTouchEvent() to handle long press
+ * - Add gestureDetector variable
+ * - Refactor onIntercept()
  */
 package com.github.rio_sh.mareave.helpers
 
 import android.content.Context
 import android.graphics.Point
 import android.util.AttributeSet
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
-import kotlin.math.sqrt
 
 /**
  * Class used to get finer granularity when tapping on GoogleMap views.
@@ -35,21 +35,28 @@ import kotlin.math.sqrt
  */
 class MapTouchWrapper : FrameLayout {
   private var touchSlop = 0
-  private var down: Point? = null
   private var listener: ((Point) -> Unit)? = null
-  
-  private var longPressStartTime = 0L
-  private var isLongPressDetected = false
-
-  companion object {
-    private const val LONG_PRESS_TIMEOUT = 300L
-  }
+  private var gestureDetector: GestureDetector
   constructor(context: Context) : super(context) {
     setup(context)
   }
 
   constructor(context: Context, attributeSet: AttributeSet?) : super(context, attributeSet) {
     setup(context)
+  }
+
+  init {
+    gestureDetector = GestureDetector(context, GestureListener())
+  }
+
+  private inner class GestureListener : GestureDetector.SimpleOnGestureListener() {
+    override fun onDown(e: MotionEvent): Boolean {
+      return true
+    }
+    override fun onLongPress(e: MotionEvent) {
+      val tapped = Point(e.x.toInt(), e.y.toInt())
+      listener?.invoke(tapped)
+    }
   }
 
   private fun setup(context: Context) {
@@ -61,44 +68,11 @@ class MapTouchWrapper : FrameLayout {
     this.listener = listener
   }
 
-  private fun distance(p1: Point, p2: Point): Double {
-    val xDiff = (p1.x - p2.x).toDouble()
-    val yDiff = (p1.y - p2.y).toDouble()
-    return sqrt(xDiff * xDiff + yDiff * yDiff)
-  }
-
   override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
     if (listener == null) {
       return false
     }
-    val x = event.x.toInt()
-    val y = event.y.toInt()
-    val tapped = Point(x, y)
-    when (event.action) {
-      MotionEvent.ACTION_DOWN -> {
-        down = tapped
-        // detect long press
-        longPressStartTime = System.currentTimeMillis()
-        isLongPressDetected = false
-      }
-      MotionEvent.ACTION_MOVE -> {
-        val currentTime = System.currentTimeMillis()
-        if (down != null && distance(down!!, tapped) >= touchSlop
-          && currentTime - longPressStartTime > LONG_PRESS_TIMEOUT && !isLongPressDetected) {
-          down = null
-          isLongPressDetected = true
-          listener?.invoke(tapped)
-          return true
-        }
-      }
-      MotionEvent.ACTION_UP -> if (down != null && distance(down!!, tapped) < touchSlop) {
-        longPressStartTime = 0
-        isLongPressDetected = false
-        return false
-      }
-      else -> {
-      }
-    }
+    gestureDetector.onTouchEvent(event)
     return false
   }
 }

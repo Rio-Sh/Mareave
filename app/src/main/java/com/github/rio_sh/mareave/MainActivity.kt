@@ -70,6 +70,7 @@ class MainActivity : AppCompatActivity() {
             val markerMessage =
                 createMessageDialog.findViewById<EditText>(R.id.editMessage).text.toString()
             view.latLng?.let { renderer.createAnchor(it, markerMessage) }
+            createMessageDialog.findViewById<EditText>(R.id.editMessage).setText("")
             createMessageDialog.dismiss()
         }
 

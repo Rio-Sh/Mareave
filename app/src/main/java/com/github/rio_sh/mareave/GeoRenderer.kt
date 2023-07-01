@@ -201,7 +201,8 @@ class GeoRenderer(val activity: MainActivity) :
         longitude = cameraGeospatialPose.longitude,
         heading = cameraGeospatialPose.heading
       )
-      activity.view.updateStatusText(earth, cameraGeospatialPose)
+      // uncomment if show the geo information on the screen
+      // activity.view.updateStatusText(earth, cameraGeospatialPose)
     }
 
     // Draw the placed anchor, if it exists.
